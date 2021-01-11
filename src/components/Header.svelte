@@ -2,44 +2,24 @@
   import { redirect } from '@roxi/routify'
   import { onMount } from 'svelte'
 
-  import { auth, APP_DATA } from '../helpers'
+  import { auth } from '../helpers'
+  import { appDataStore } from '../stores/appData'
+  import { collabStore } from '../stores/collab'
 
   let userChipSet
   let userChip
   let vrToggleMenuItem
   let vrSpectatorMenuItem
+  
+  let { renderer, undoRedoManager, toolManager } = $appDataStore
+  let { sessionSync } = $collabStore
 
   onMount(() => {
     vrToggleMenuItem.textContent = 'VR Device Not Detected'
     vrToggleMenuItem.disabled = true
 
-    auth.getUserData().then((userData) => {
-      if (!userData) {
-        return
-      }
-
-      {
-        const { renderer } = $APP_DATA
-        renderer
-          .getXRViewport()
-          .then((xrViewport) => {
-            xrViewport.spectatorMode = false // disable by default.
-            if (vrToggleMenuItem) vrToggleMenuItem.textContent = 'Launch VR'
-            xrViewport.on('presentingChanged', (event) => {
-              const { state } = event
-              if (state) {
-                vrToggleMenuItem.textContent = 'Exit VR'
-              } else {
-                vrToggleMenuItem.textContent = 'Launch VR'
-              }
-            })
-          })
-          .catch((reason) => {
-            console.warn('Unable to setup XR:' + reason)
-          })
-      }
-
-      const { renderer, session, sessionSync } = $APP_DATA
+    collabStore.subscribe((collabData) => {
+      const { session, sessionSync } = collabData
 
       userChip.userData = userData
       userChipSet.session = session
@@ -69,25 +49,43 @@
         })
       }
     })
+
+    appDataStore.subscribe((appData) => {
+      const { renderer } = appData
+      renderer
+        .getXRViewport()
+        .then((xrViewport) => {
+          xrViewport.spectatorMode = false // disable by default.
+          if (vrToggleMenuItem) vrToggleMenuItem.textContent = 'Launch VR'
+          xrViewport.on('presentingChanged', (event) => {
+            const { state } = event
+            if (state) {
+              vrToggleMenuItem.textContent = 'Exit VR'
+            } else {
+              vrToggleMenuItem.textContent = 'Launch VR'
+            }
+          })
+        })
+        .catch((reason) => {
+          console.warn('Unable to setup XR:' + reason)
+        })
+    })
   })
 
   function handleFrameAll() {
-    const { renderer } = $APP_DATA
     renderer.frameAll()
   }
+  
   function handleUndo() {
-    const { undoRedoManager } = $APP_DATA
     undoRedoManager.undo()
   }
 
   function handleRedo() {
-    const { undoRedoManager } = $APP_DATA
     undoRedoManager.redo()
   }
 
   let selectionEnabled = false
   function toggleSelectMode() {
-    const { toolManager } = $APP_DATA
     if (!selectionEnabled) {
       toolManager.pushTool('SelectionTool')
       selectionEnabled = true
@@ -98,11 +96,12 @@
   }
 
   function handleDA() {
-    auth.getUserData().then((userData) => {
+    // auth.getUserData().then((userData) => {
+    
+    // appDataStore.subscribe((appData) => {
       if (!userData) {
         return
       }
-      const { renderer, sessionSync } = $APP_DATA
       {
         // SessionSync interactions.
         const camera = renderer.getViewport().getCamera()
@@ -113,8 +112,8 @@
     })
   }
 
+  
   function handleLaunchVR() {
-    const { renderer } = $APP_DATA
 
     renderer
       .getXRViewport()
@@ -127,7 +126,6 @@
   }
 
   function handleToggleVRSpatatorMode() {
-    const { renderer } = $APP_DATA
     renderer.getXRViewport().then((xrViewport) => {
       xrViewport.spectatorMode = !xrViewport.spectatorMode
     })

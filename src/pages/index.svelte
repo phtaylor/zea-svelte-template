@@ -4,7 +4,7 @@
 
   import Header from '../components/Header.svelte'
   import Renderer from '../components/Renderer.svelte'
-  import { auth } from '../helpers'
+  import { auth } from '../helpers/auth'
 
   let userData
   let session
