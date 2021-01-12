@@ -39,7 +39,7 @@
     "build": "run build scripts below",
     "build:app": "build single page application (SPA)",
     "build:static": "Generate static pages",
-    "serve": "serve content in 'dist' folder",
+    "serve": "serve content in 'public/' dir.",
     "rollup": "run the rollup bundler",
     "nollup": "run the nollup no-bundler",
     "routify": "run routify"
@@ -54,17 +54,17 @@
     "rollup": "rollup -cw",
     "routify": "routify",
     "serve": "spassr --ssr",
-    "to-cleanup": "rm -Rf dist/ node_modules/ yarn.lock"
+    "to-cleanup": "rm -Rf public/ node_modules/ yarn.lock"
   },
   "routify": {
     "extensions": "svelte,html,svx,md"
   },
   "spassr": {
     "assetsDir": [
-      "dist",
+      "public",
       "assets"
     ],
-    "script": "dist/build/main.js",
+    "script": "public/build/main.js",
     "ssrOptions": {
       "inlineDynamicImports": true
     }
