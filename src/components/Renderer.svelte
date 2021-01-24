@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { auth, APP_DATA } from '../helpers'
   import '../helpers/fps-display'
+  import { loadProductStructure } from '../helpers/loadProductStructure'
   import Sidebar from '../components/Sidebar.svelte'
   // import { get } from 'http'
 
@@ -106,7 +107,7 @@
       if (event.button == 2) {
         console.log(event)
         // stop propagation to prevent the camera manipulator from handling the event.
-        event.stopPropagation()
+        // event.stopPropagation()
       }
     })
     renderer.getViewport().on('pointerDoublePressed', (event) => {
@@ -153,33 +154,9 @@
     }
     /** FPS DISPLAY END */
 
-    /** CAD START */
-    renderer.addPass(new GLCADPass())
-
-    const url = '/assets/gear_box_final_asm-visu.zcad'
-    const asset = new CADAsset()
-    asset.on('error', (event) => {
-      console.warn('Error' + event)
-    })
-    asset.on('loaded', () => {
-      const materials = asset.getMaterialLibrary().getMaterials()
-      materials.forEach((material) => {
-        if (material.getShaderName() == 'SimpleSurfaceShader') {
-          material.setShaderName('StandardSurfaceShader')
-        }
-      })
-      renderer.frameAll()
-    })
-    asset.getGeometryLibrary().on('loaded', () => {
-      renderer.frameAll()
-    })
-    scene.getRoot().addChild(asset)
-    asset.getParameter('FilePath').setValue(url)
-    /** CAD END */
-
     /** COLLAB START*/
     const SOCKET_URL = 'https://websocket-staging.zea.live'
-    const ROOM_ID = url
+    let ROOM_ID = 'none'
     auth.getUserData().then((userData) => {
       if (!userData) return
       const session = new Session(userData, SOCKET_URL)
@@ -191,6 +168,17 @@
       APP_DATA.update(() => appData)
     })
     /** COLLAB END */
+
+    /** CAD START */
+    renderer.addPass(new GLCADPass())
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.has('ps')) {
+      const psUrl = urlParams.get('ps')
+      ROOM_ID = psUrl
+      const productStructure = loadProductStructure(psUrl)
+      scene.getRoot().addChild(productStructure)
+    }
+    /** CAD END */
 
     APP_DATA.set(appData)
   })
