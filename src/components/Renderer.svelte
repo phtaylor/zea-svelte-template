@@ -31,7 +31,11 @@
   let progressBar
 
   onMount(() => {
-    const renderer = new GLRenderer(canvas)
+    const urlParams = new URLSearchParams(window.location.search)
+
+    const renderer = new GLRenderer(canvas, {
+      debugGeomIds: false,
+    })
     const scene = new Scene()
 
     // Assigning an Environment Map enables PBR lighting for niceer shiny surfaces.
@@ -68,9 +72,19 @@
     const selectionManager = new SelectionManager(appData, {
       enableXfoHandles: true,
     })
-    selectionManager.showHandles()
+    selectionManager.showHandles(true)
+
     appData.selectionManager = selectionManager
     const selectionTool = new SelectionTool(appData)
+    selectionTool.setSelectionFilter((item) => {
+      while (
+        item.getName().startsWith('Mesh') ||
+        item.getName().startsWith('Edge') ||
+        item.getName().startsWith('TreeItem')
+      )
+        item = item.getOwner()
+      return item
+    })
     toolManager.registerTool('SelectionTool', selectionTool)
     toolManager.registerTool('CameraManipulator', cameraManipulator)
 
