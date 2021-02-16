@@ -39,20 +39,24 @@
     const scene = new Scene()
 
     // Assigning an Environment Map enables PBR lighting for niceer shiny surfaces.
-    if (!SystemDesc.isMobileDevice) {
-      const envMap = new EnvMap('envMap')
-      envMap
-        .getParameter('FilePath')
-        .setValue(`/assets/HDR_029_Sky_Cloudy_Ref.vlenv`)
-      envMap.getParameter('HeadLightMode').setValue(true)
-      scene.getSettings().getParameter('EnvMap').setValue(envMap)
-    }
+    // if (!SystemDesc.isMobileDevice) {
+    //   const envMap = new EnvMap('envMap')
+    //   envMap
+    //     .getParameter('FilePath')
+    //     .setValue(`/assets/HDR_029_Sky_Cloudy_Ref.vlenv`)
+    //   envMap.getParameter('HeadLightMode').setValue(true)
+    //   scene.getSettings().getParameter('EnvMap').setValue(envMap)
+    // }
 
     scene.setupGrid(10, 10)
     scene
       .getSettings()
       .getParameter('BackgroundColor')
       .setValue(new Color(0.35, 0.35, 0.35, 1))
+    renderer
+      .getViewport()
+      .getCamera()
+      .setPositionAndTarget(new Vec3(120, -120, 80), new Vec3(30, 80, 15))
     renderer.setScene(scene)
 
     const appData = {}
@@ -168,6 +172,10 @@
     }
     /** FPS DISPLAY END */
 
+    /** CAD START */
+    renderer.addPass(new GLCADPass())
+    /** CAD END */
+
     /** COLLAB START*/
     const SOCKET_URL = 'https://websocket-staging.zea.live'
     let ROOM_ID = 'none'
@@ -180,19 +188,15 @@
       appData.session = session
       appData.sessionSync = sessionSync
       APP_DATA.update(() => appData)
+
+      if (urlParams.has('ps')) {
+        const psUrl = urlParams.get('ps')
+        ROOM_ID = psUrl
+        const productStructure = loadProductStructure(psUrl)
+        scene.getRoot().addChild(productStructure)
+      }
     })
     /** COLLAB END */
-
-    /** CAD START */
-    renderer.addPass(new GLCADPass())
-    const urlParams = new URLSearchParams(window.location.search)
-    if (urlParams.has('ps')) {
-      const psUrl = urlParams.get('ps')
-      ROOM_ID = psUrl
-      const productStructure = loadProductStructure(psUrl)
-      scene.getRoot().addChild(productStructure)
-    }
-    /** CAD END */
 
     APP_DATA.set(appData)
   })
